@@ -36,6 +36,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.Thread;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 
 /**
  * Consumer is a top-level component coordinating reading, writing, and uploading Kafka log
@@ -138,26 +140,32 @@ public class Consumer extends Thread {
             } catch (IOException e) {
                 throw new RuntimeException("Failed to adjust offset.", e);
             }
-            ParsedMessage parsedMessage = null;
-            try {
-                Message transformedMessage = mMessageTransformer.transform(rawMessage);
-                parsedMessage = mMessageParser.parse(transformedMessage);
-                final double DECAY = 0.999;
-                mUnparsableMessages *= DECAY;
-            } catch (Throwable e) {
-                mUnparsableMessages++;
-                final double MAX_UNPARSABLE_MESSAGES = 1000.;
-                if (mUnparsableMessages > MAX_UNPARSABLE_MESSAGES) {
-                    throw new RuntimeException("Failed to parse message " + rawMessage, e);
+            ArrayList<ParsedMessage> parsedMessageGroup = new ArrayList<ParsedMessage>();
+            final double DECAY = 0.999;
+            mUnparsableMessages *= DECAY;
+            ArrayList<Message> transformedMessageGroup = mMessageTransformer.transform(rawMessage);
+            for(Message transformedMessage: transformedMessageGroup){
+                try {
+                    ParsedMessage parsedMessage = mMessageParser.parse(transformedMessage);
+                    parsedMessageGroup.add(parsedMessage);
+                } catch (Throwable e) {
+                    mUnparsableMessages++;
+                    final double MAX_UNPARSABLE_MESSAGES = 1000.;
+                    if (mUnparsableMessages > MAX_UNPARSABLE_MESSAGES) {
+                        throw new RuntimeException("Failed to parse message " + rawMessage, e);
+                    }
+                    LOG.warn("Failed to parse message {}", rawMessage, e);
                 }
-                LOG.warn("Failed to parse message {}", rawMessage, e);
             }
 
-            if (parsedMessage != null) {
-                try {
-                    mMessageWriter.write(parsedMessage);
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to write message " + parsedMessage, e);
+            if (!parsedMessageGroup.isEmpty()) {
+                for (ParsedMessage parsedMessage: parsedMessageGroup)
+                {
+                    try {
+                        mMessageWriter.write(parsedMessage);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Failed to write message " + parsedMessage, e);
+                    }
                 }
             }
         }

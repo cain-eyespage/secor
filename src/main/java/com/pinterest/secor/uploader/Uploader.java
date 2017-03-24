@@ -138,7 +138,7 @@ public class Uploader {
         LogFilePath dstPath = null;
         int copiedMessages = 0;
         // Deleting the writer closes its stream flushing all pending data to the disk.
-        mFileRegistry.deleteWriter(srcPath);
+        mFileRegistry.deleteWriter(srcPath, false);
         try {
             CompressionCodec codec = null;
             String extension = "";

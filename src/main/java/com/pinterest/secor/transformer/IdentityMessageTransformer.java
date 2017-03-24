@@ -3,6 +3,8 @@ package com.pinterest.secor.transformer;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 
+import java.util.ArrayList;
+
 /**
  * Default message transformer class which does no transformation
  * 
@@ -20,7 +22,10 @@ public class IdentityMessageTransformer implements MessageTransformer {
         mConfig = config;
     }
     @Override
-    public Message transform(Message message) {
-        return message;
+    public ArrayList<Message> transform(Message message) {
+
+        ArrayList messageGroup = new ArrayList<Message>();
+        messageGroup.add(message);
+        return messageGroup;
     }
 }

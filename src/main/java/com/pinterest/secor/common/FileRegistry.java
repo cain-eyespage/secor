@@ -159,7 +159,7 @@ public class FileRegistry {
             StatsUtil.clearLabel("secor.modification_age_sec." + topicPartition.getTopic() + "." +
                                  topicPartition.getPartitions()[0]);
         }
-        deleteWriter(path);
+        deleteWriter(path, false);
         FileUtil.delete(path.getLogFilePath());
         FileUtil.delete(path.getLogFileCrcPath());
     }
@@ -188,10 +188,11 @@ public class FileRegistry {
      * Delete writer for a given topic partition.  Underlying file is not removed.
      * @param path The path to remove the writer for.
      */
-    public void deleteWriter(LogFilePath path) throws IOException {
+    public void deleteWriter(LogFilePath path, Boolean exceptWriter) throws IOException {
         FileWriter writer = mWriters.get(path);
         if (writer == null) {
-            LOG.warn("No writer found for path {}", path.getLogFilePath());
+            if (exceptWriter)
+                LOG.warn("No writer found for path {}", path.getLogFilePath());
         } else {
             LOG.info("Deleting writer for path {}", path.getLogFilePath());
             writer.close();
@@ -215,7 +216,7 @@ public class FileRegistry {
                 Arrays.toString(topicPartitionGroup.getPartitions()));
         } else {
             for (LogFilePath path : paths) {
-                deleteWriter(path);
+                deleteWriter(path, false);
             }
         }
     }

@@ -27,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+
 public abstract class TimestampedMessageParser extends MessageParser implements Partitioner {
 
     private static final Logger LOG = LoggerFactory.getLogger(TimestampedMessageParser.class);
@@ -123,7 +124,7 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
     }
 
     static String usingMinutePrefix(SecorConfig config) {
-        return config.getString("partitioner.granularity.minute.prefix", "min=");
+        return config.getString("partitioner.granularity.minute.prefix", "");
     }
 
     protected static long toMillis(final long timestamp) {
